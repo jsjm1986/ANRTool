@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>小说复刻工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="loginPage" class="login-page">
+        <div class="login-container">
+            <h2>API 密钥验证</h2>
+            <div class="input-group">
+                <label for="apiKey">请输入 Deepseek API 密钥：</label>
+                <input type="password" id="apiKey" placeholder="输入您的 API 密钥">
+            </div>
+            <button id="loginBtn">验证并进入</button>
+            <p id="loginError" class="error-message"></p>
+        </div>
+    </div>
+
+    <!-- 主应用页面 -->
+    <div id="appPage" class="container" style="display: none;">
+        <nav class="top-nav">
+            <div class="nav-brand">
+                <i class="fas fa-book-open"></i>
+                <span>小说复刻工具</span>
+            </div>
+            <div class="nav-actions">
+                <button id="saveBtn" class="nav-btn">
+                    <i class="fas fa-save"></i> 保存进度
+                </button>
+                <button id="exportBtn" class="nav-btn">
+                    <i class="fas fa-file-export"></i> 导出结果
+                </button>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="upload-section">
+                    <label class="file-upload-btn">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>选择小说文件</span>
+                        <input type="file" id="fileInput" accept=".txt" hidden>
+                    </label>
+                </div>
+
+                <div class="chapter-list">
+                    <h3><i class="fas fa-list"></i> 章节列表</h3>
+                    <div id="chapterListContainer"></div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="parameters-toggle">
+                    <button id="toggleParams" class="toggle-btn">
+                        <i class="fas fa-chevron-up"></i> 收起参数
+                    </button>
+                </div>
+
+                <div class="parameters slide-panel">
+                    <div class="parameter-groups">
+                        <!-- 基础设置 -->
+                        <div class="parameter-group">
+                            <h4>基础设置</h4>
+                            <div class="parameter-item">
+                                <label>写作风格：</label>
+                                <select id="style">
+                                    <option value="modern">现代派</option>
+                                    <option value="classic">古典派</option>
+                                    <option value="humor">幽默风格</option>
+                                    <option value="suspense">悬疑风格</option>
+                                    <option value="romantic">言情风格</option>
+                                </select>
+                            </div>
+                            <div class="parameter-item">
+                                <label>情节改编程度：<span id="plotChangeValue">50%</span></label>
+                                <input type="range" id="plotChange" min="0" max="100" value="50">
+                            </div>
+                            <div class="parameter-item">
+                                <label>人物性格调整：<span id="characterChangeValue">50%</span></label>
+                                <input type="range" id="characterChange" min="0" max="100" value="50">
+                            </div>
+                        </div>
+
+                        <!-- 语言风格 -->
+                        <div class="parameter-group">
+                            <h4>语言风格</h4>
+                            <div class="parameter-item">
+                                <label>文字复杂度：<span id="complexityValue">50%</span></label>
+                                <input type="range" id="complexity" min="0" max="100" value="50">
+                            </div>
+                            <div class="parameter-item">
+                                <label>描写细节程度：<span id="detailLevelValue">50%</span></label>
+                                <input type="range" id="detailLevel" min="0" max="100" value="50">
+                            </div>
+                            <div class="parameter-item">
+                                <label>对话比重：<span id="dialogueRatioValue">50%</span></label>
+                                <input type="range" id="dialogueRatio" min="0" max="100" value="50">
+                            </div>
+                        </div>
+
+                        <!-- 情感设置 -->
+                        <div class="parameter-group">
+                            <h4>情感设置</h4>
+                            <div class="parameter-item">
+                                <label>感情色彩：</label>
+                                <select id="emotionalTone">
+                                    <option value="neutral">中性</option>
+                                    <option value="positive">积极向上</option>
+                                    <option value="negative">深沉压抑</option>
+                                    <option value="dramatic">戏剧化</option>
+                                </select>
+                            </div>
+                            <div class="parameter-item">
+                                <label>人物感情强度：<span id="emotionalIntensityValue">50%</span></label>
+                                <input type="range" id="emotionalIntensity" min="0" max="100" value="50">
+                            </div>
+                        </div>
+
+                        <!-- 伏笔设置 -->
+                        <div class="parameter-group">
+                            <h4>伏笔设置</h4>
+                            <div class="parameter-item">
+                                <label>伏笔识别敏感度：<span id="foreshadowingSensitivityValue">50%</span></label>
+                                <input type="range" id="foreshadowingSensitivity" min="0" max="100" value="50">
+                                <small class="parameter-desc">越高越容易发现原文中的伏笔线索</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>伏笔应用强度：<span id="foreshadowingIntensityValue">50%</span></label>
+                                <input type="range" id="foreshadowingIntensity" min="0" max="100" value="50">
+                                <small class="parameter-desc">控制伏笔在后续章节中的展现程度</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>伏笔类型偏好：</label>
+                                <select id="foreshadowingType" multiple>
+                                    <option value="plot">情节伏笔</option>
+                                    <option value="character">人物伏笔</option>
+                                    <option value="object">物品伏笔</option>
+                                    <option value="environment">环境伏笔</option>
+                                    <option value="dialogue">对话伏笔</option>
+                                </select>
+                                <small class="parameter-desc">按住 Ctrl/Command 键可多选</small>
+                            </div>
+                            <div class="foreshadowing-list">
+                                <h5>已识别的伏笔</h5>
+                                <div id="foreshadowingList" class="foreshadowing-items"></div>
+                            </div>
+                        </div>
+
+                        <!-- 世界观设置 -->
+                        <div class="parameter-group">
+                            <h4>世界观设置</h4>
+                            <div class="parameter-item">
+                                <label>世界背景：</label>
+                                <select id="worldSetting">
+                                    <option value="keep">保持原有</option>
+                                    <option value="modern">现代都市</option>
+                                    <option value="ancient">古代历史</option>
+                                    <option value="fantasy">奇幻世界</option>
+                                    <option value="future">未来科技</option>
+                                    <option value="steampunk">蒸汽朋克</option>
+                                </select>
+                            </div>
+                            <div class="parameter-item">
+                                <label>时代转换程度：<span id="timelineChangeValue">0%</span></label>
+                                <input type="range" id="timelineChange" min="0" max="100" value="0">
+                                <small class="parameter-desc">调整故事发生的年代或时间线</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>文化背景调整：<span id="culturalChangeValue">0%</span></label>
+                                <input type="range" id="culturalChange" min="0" max="100" value="0">
+                                <small class="parameter-desc">调整故事中的文化元素和社会背景</small>
+                            </div>
+                        </div>
+
+                        <!-- 人物塑造 -->
+                        <div class="parameter-group">
+                            <h4>人物塑造</h4>
+                            <div class="parameter-item">
+                                <label>主角形象调整：</label>
+                                <select id="protagonistAdjustment" multiple>
+                                    <option value="personality">性格特征</option>
+                                    <option value="background">背景经历</option>
+                                    <option value="motivation">动机目标</option>
+                                    <option value="relationship">人际关系</option>
+                                </select>
+                            </div>
+                            <div class="parameter-item">
+                                <label>配角重要性：<span id="supportingRoleValue">50%</span></label>
+                                <input type="range" id="supportingRole" min="0" max="100" value="50">
+                                <small class="parameter-desc">调整配角在故事中的戏份和影响力</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>人物关系网调整：<span id="relationshipComplexityValue">50%</span></label>
+                                <input type="range" id="relationshipComplexity" min="0" max="100" value="50">
+                                <small class="parameter-desc">调整人物之间关系的复杂程度</small>
+                            </div>
+                        </div>
+
+                        <!-- 叙事结构 -->
+                        <div class="parameter-group">
+                            <h4>叙事结构</h4>
+                            <div class="parameter-item">
+                                <label>叙事视角：</label>
+                                <select id="narrativePerspective">
+                                    <option value="keep">保持原有</option>
+                                    <option value="first">第一人称</option>
+                                    <option value="third-limited">第三人称限制性</option>
+                                    <option value="third-omniscient">第三人称全知</option>
+                                    <option value="multiple">多视角</option>
+                                </select>
+                            </div>
+                            <div class="parameter-item">
+                                <label>时间线结构：</label>
+                                <select id="timelineStructure">
+                                    <option value="linear">线性叙事</option>
+                                    <option value="nonlinear">非线性叙事</option>
+                                    <option value="parallel">平行时间线</option>
+                                    <option value="flashback">闪回结构</option>
+                                </select>
+                            </div>
+                            <div class="parameter-item">
+                                <label>悬念设置强度：<span id="suspenseIntensityValue">50%</span></label>
+                                <input type="range" id="suspenseIntensity" min="0" max="100" value="50">
+                                <small class="parameter-desc">控制故事悬念的设置频率和强度</small>
+                            </div>
+                        </div>
+
+                        <!-- 主题深化 -->
+                        <div class="parameter-group">
+                            <h4>主题深化</h4>
+                            <div class="parameter-item">
+                                <label>核心主题：</label>
+                                <select id="coreThemes" multiple>
+                                    <option value="growth">成长</option>
+                                    <option value="love">爱情</option>
+                                    <option value="friendship">友情</option>
+                                    <option value="family">亲情</option>
+                                    <option value="justice">正义</option>
+                                    <option value="redemption">救赎</option>
+                                    <option value="power">权力</option>
+                                    <option value="survival">生存</option>
+                                </select>
+                                <small class="parameter-desc">选择要强化的核心主题（可多选）</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>主题表现方式：</label>
+                                <select id="themeExpression">
+                                    <option value="explicit">直接表达</option>
+                                    <option value="implicit">含蓄暗示</option>
+                                    <option value="symbolic">象征手法</option>
+                                    <option value="mixed">混合表达</option>
+                                </select>
+                            </div>
+                            <div class="parameter-item">
+                                <label>哲理深度：<span id="philosophicalDepthValue">50%</span></label>
+                                <input type="range" id="philosophicalDepth" min="0" max="100" value="50">
+                                <small class="parameter-desc">调整故事的哲理性思考深度</small>
+                            </div>
+                        </div>
+
+                        <!-- 场景描写 -->
+                        <div class="parameter-group">
+                            <h4>场景描写</h4>
+                            <div class="parameter-item">
+                                <label>环境细节：<span id="environmentalDetailValue">50%</span></label>
+                                <input type="range" id="environmentalDetail" min="0" max="100" value="50">
+                                <small class="parameter-desc">控制环境描写的细节程度</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>氛围营造：<span id="atmosphereIntensityValue">50%</span></label>
+                                <input type="range" id="atmosphereIntensity" min="0" max="100" value="50">
+                                <small class="parameter-desc">控制场景氛围的营造强度</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>场景互动性：<span id="sceneInteractionValue">50%</span></label>
+                                <input type="range" id="sceneInteraction" min="0" max="100" value="50">
+                                <small class="parameter-desc">调整人物与环境的互动程度</small>
+                            </div>
+                        </div>
+
+                        <!-- 文学技巧 -->
+                        <div class="parameter-group">
+                            <h4>文学技巧</h4>
+                            <div class="parameter-item">
+                                <label>修辞手法：</label>
+                                <select id="literaryDevices" multiple>
+                                    <option value="metaphor">隐喻</option>
+                                    <option value="symbolism">象征</option>
+                                    <option value="contrast">对比</option>
+                                    <option value="foreshadowing">伏笔</option>
+                                    <option value="irony">讽刺</option>
+                                    <option value="stream">意识流</option>
+                                </select>
+                            </div>
+                            <div class="parameter-item">
+                                <label>意象运用：<span id="imageryIntensityValue">50%</span></label>
+                                <input type="range" id="imageryIntensity" min="0" max="100" value="50">
+                                <small class="parameter-desc">控制意象的使用频率和强度</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>语言风格：</label>
+                                <select id="languageStyle">
+                                    <option value="simple">简洁明快</option>
+                                    <option value="elegant">优美典雅</option>
+                                    <option value="poetic">诗意盎然</option>
+                                    <option value="colloquial">口语化</option>
+                                    <option value="mixed">混合风格</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 智能替换设置 -->
+                        <div class="parameter-group" data-type="replacement">
+                            <h4>智能替换</h4>
+                            <div class="parameter-item">
+                                <label>替换程度：<span id="replacementLevelValue">50%</span></label>
+                                <input type="range" id="replacementLevel" min="0" max="100" value="50">
+                                <small class="parameter-desc">控制整体替换的程度</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>替换类型：</label>
+                                <select id="replacementTypes" multiple>
+                                    <option value="character">人物名称</option>
+                                    <option value="location">地点名称</option>
+                                    <option value="item">物品名称</option>
+                                    <option value="organization">组织名称</option>
+                                    <option value="event">事件名称</option>
+                                    <option value="skill">技能名称</option>
+                                    <option value="term">专有名词</option>
+                                </select>
+                                <small class="parameter-desc">选择需要替换的元素类型</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>替换风格：</label>
+                                <select id="replacementStyle">
+                                    <option value="similar">相似风格</option>
+                                    <option value="contrast">反差风格</option>
+                                    <option value="neutral">中性风格</option>
+                                    <option value="creative">创新风格</option>
+                                </select>
+                                <small class="parameter-desc">选择替换名称的风格特点</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>文化倾向：</label>
+                                <select id="culturalStyle">
+                                    <option value="keep">保持原有</option>
+                                    <option value="chinese">中国风</option>
+                                    <option value="western">西方风</option>
+                                    <option value="japanese">日本风</option>
+                                    <option value="korean">韩国风</option>
+                                    <option value="mixed">混合风格</option>
+                                </select>
+                                <small class="parameter-desc">选择替换名称的文化特点</small>
+                            </div>
+                            <div class="parameter-item">
+                                <label>一致性维护：<span id="consistencyLevelValue">80%</span></label>
+                                <input type="range" id="consistencyLevel" min="0" max="100" value="80">
+                                <small class="parameter-desc">控制名称替换的一致性程度</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <button id="generateBtn" class="primary-btn">
+                        <i class="fas fa-magic"></i> 开始复刻
+                    </button>
+                    <div class="generation-options">
+                        <label>
+                            <input type="checkbox" id="autoSave"> 自动保存
+                        </label>
+                        <label>
+                            <input type="checkbox" id="realTimePreview"> 实时预览
+                        </label>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-controls">
+                        <button id="viewMode" class="toggle-btn">
+                            <i class="fas fa-columns"></i>
+                        </button>
+                        <div class="zoom-controls">
+                            <button id="zoomOut"><i class="fas fa-search-minus"></i></button>
+                            <span id="zoomLevel">100%</span>
+                            <button id="zoomIn"><i class="fas fa-search-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="result-container">
+                        <div class="original-text">
+                            <h3>原文</h3>
+                            <div id="originalContent" class="content-box"></div>
+                        </div>
+                        <div class="generated-text">
+                            <h3>复刻结果</h3>
+                            <div id="generatedContent" class="content-box"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
