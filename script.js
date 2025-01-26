@@ -267,15 +267,15 @@ class NovelRewriter {
 
                     document.getElementById('currentTaskText').textContent = `正在处理：${this.chapters[i].title}`;
                     const context = this.getContext(i);
-                    const params = {
-                        style: document.getElementById('style').value,
-                        plotChange: document.getElementById('plotChange').value,
-                        characterChange: document.getElementById('characterChange').value,
+                    const params = this.getCurrentParameters();
+                    
+                    // 调用AI进行改写
+                    const generatedText = await this.callAIAPI({
+                        context,
                         text: this.chapters[i].content,
-                        context
-                    };
+                        params
+                    });
 
-                    const generatedText = await this.callAIAPI(params);
                     this.chapters[i].generated = true;
                     this.generatedContent[i] = generatedText;
 
@@ -291,15 +291,15 @@ class NovelRewriter {
                     this.displayChapters();
 
                     // 自动保存
-                    if (document.getElementById('autoSave').checked) {
+                    if (document.getElementById('autoSave')?.checked) {
                         this.saveProgress();
                     }
                 }
             }
             this.showNotification('生成完成');
         } catch (error) {
-            console.error('生成错误:', error);
-            this.showNotification('生成失败，请重试', 'error');
+            console.error('生成失败:', error);
+            this.showNotification(`生成失败: ${error.message}`, 'error');
         } finally {
             document.body.removeChild(loadingIndicator);
         }
@@ -829,38 +829,6 @@ ${text}
             'mixed': '混合多种文化特色的命名'
         };
         return styleMap[style] || style;
-    }
-
-    // 在生成小说时应用名称替换
-    async generateNovel() {
-        try {
-            const text = document.getElementById('inputText').value;
-            const params = this.getCurrentParameters();
-
-            // 首先生成名称替换映射表
-            const replacements = await this.generateNameReplacements(text, params);
-
-            // 将替换映射表添加到参数中
-            params.nameReplacements = replacements;
-
-            // 调用AI进行改写
-            const result = await this.callAIAPI({
-                context: {
-                    chapterTitle: document.getElementById('chapterTitle').value || '未命名章节',
-                    currentChapter: document.getElementById('currentChapter').value || 1,
-                    totalChapters: document.getElementById('totalChapters').value || 1,
-                    previousChapter: document.getElementById('previousChapter').value || '',
-                    foreshadowings: this.foreshadowings.get(document.getElementById('currentChapter').value) || []
-                },
-                text: text,
-                nameReplacements: replacements
-            });
-
-            document.getElementById('outputText').value = result;
-        } catch (error) {
-            console.error('生成失败:', error);
-            alert('生成失败，请检查输入和设置后重试');
-        }
     }
 }
 
